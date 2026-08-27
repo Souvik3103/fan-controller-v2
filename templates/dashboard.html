@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bambu A1 Dashboard</title>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+
+<header>
+    <div>
+        <h1>Bambu A1</h1>
+        <div id="connection" class="connection offline">
+            <span class="status-dot"></span>
+            <span id="connection-text">OFFLINE</span>
+        </div>
+    </div>
+
+    <div>
+        <h2>Fan Control</h2>
+    </div>
+</header>
+
+<main>
+
+<section class="top-grid">
+
+<div class="card printer-card">
+    <div class="card-title">
+        <span>Printer</span>
+        <span id="printer-state">UNKNOWN</span>
+    </div>
+
+    <div id="printer-activity" class="printer-activity">Unknown</div>
+
+    <div id="filename" class="filename">No print</div>
+
+    <div class="progress-container">
+        <div id="progress" class="progress"></div>
+    </div>
+
+    <div id="progress-text" class="progress-text">0%</div>
+
+    <div class="stats">
+        <div><span>Nozzle</span><strong id="nozzle">--</strong></div>
+        <div><span>Bed</span><strong id="bed">--</strong></div>
+        <div><span>Chamber</span><strong id="chamber">--</strong></div>
+        <div><span>Layer</span><strong id="layer">--</strong></div>
+        <div><span>Remaining</span><strong id="remaining">--</strong></div>
+        <div><span>Estimated Finish</span><strong id="finish-time">--</strong></div>
+        <div><span>Wi-Fi</span><strong id="wifi">--</strong></div>
+        <div><span>Speed</span><strong id="print-speed">--</strong></div>
+    </div>
+
+    <div class="printer-controls">
+        <button id="resume-button" class="green" onclick="resumePrint()">RESUME</button>
+        <button id="pause-button" class="blue" onclick="pausePrint()">PAUSE</button>
+        <button id="stop-button" class="red" onclick="stopPrint()">STOP</button>
+    </div>
+</div>
+
+<div class="card fan-card">
+    <div class="card-title">
+        <span>Ventilation</span>
+        <span id="fan-status">OFF</span>
+    </div>
+
+    <div id="fan-indicator" class="fan-indicator off">OFF</div>
+
+    <div class="control-mode">
+        <h3>Control Mode</h3>
+        <div class="mode-buttons">
+            <button class="mode-button" id="manual-mode" onclick="setMode('manual')">MANUAL</button>
+            <button class="mode-button" id="bambu-mode" onclick="setMode('bambu')">BAMBU AUTO</button>
+        </div>
+    </div>
+
+    <div class="mode">Mode: <strong id="fan-mode">MANUAL</strong></div>
+
+    <div class="buttons">
+        <button class="green" onclick="fanOn()">ON</button>
+        <button class="red" onclick="fanOff()">OFF</button>
+    </div>
+
+    <hr>
+
+    <h3>Custom Timer</h3>
+
+    <div class="timer-inputs">
+        <input id="hours" type="number" min="0" max="8" value="0">
+        <input id="minutes" type="number" min="0" max="59" value="30">
+        <input id="seconds" type="number" min="0" max="59" value="0">
+    </div>
+
+    <div class="timer-labels">
+        <span>Hours</span><span>Minutes</span><span>Seconds</span>
+    </div>
+
+    <button class="blue full" onclick="startTimer()">START TIMER</button>
+    <button class="gray full" onclick="cancelTimer()">CANCEL TIMER</button>
+
+    <div id="timer-display" class="timer-display">00:00:00</div>
+</div>
+
+</section>
+
+<section class="card">
+    <div class="card-title">
+        <span>Temperature</span>
+        <div class="range-buttons">
+            <button onclick="setTemperatureRange('15m')">15m</button>
+            <button class="active" onclick="setTemperatureRange('1h')">1h</button>
+            <button onclick="setTemperatureRange('6h')">6h</button>
+            <button onclick="setTemperatureRange('24h')">24h</button>
+        </div>
+    </div>
+    <div class="chart-container">
+        <canvas id="temperature-chart"></canvas>
+    </div>
+</section>
+
+<section class="split-grid">
+
+<div class="card">
+    <div class="card-title"><span>Bambu Automation</span></div>
+
+    <label class="setting">
+        <input id="automation-enabled" type="checkbox">
+        Enable automation
+    </label>
+
+    <label class="setting">
+        <input id="fan-printing" type="checkbox">
+        Fan while printing
+    </label>
+
+    <label class="setting">
+        <input id="fan-error" type="checkbox">
+        Fan on printer error
+    </label>
+
+    <label class="setting">
+        Cooldown after print
+        <input id="cooldown" type="number" min="0" max="240" value="30">
+        minutes
+    </label>
+
+    <button class="blue full" onclick="saveSettings()">SAVE SETTINGS</button>
+</div>
+
+<div class="card">
+    <div class="card-title"><span>System</span><span id="system-health">--</span></div>
+
+    <div class="system-grid">
+        <div><span>CPU</span><strong id="cpu">--</strong></div>
+        <div><span>Memory</span><strong id="memory">--</strong></div>
+        <div><span>Disk</span><strong id="disk">--</strong></div>
+        <div><span>Pi Temp</span><strong id="pi-temp">--</strong></div>
+        <div><span>Uptime</span><strong id="uptime">--</strong></div>
+        <div><span>MQTT</span><strong id="mqtt-health">--</strong></div>
+    </div>
+</div>
+
+</section>
+
+<section class="card">
+    <div class="card-title"><span>Print History</span></div>
+    <div id="print-history" class="print-history">Loading...</div>
+</section>
+
+<section class="card events-card">
+    <div class="card-title">
+        <span>Latest Events</span>
+        <span>10</span>
+    </div>
+    <div id="events" class="events-scroll">Loading...</div>
+</section>
+
+</main>
+
+<script src="/static/dashboard.js"></script>
+</body>
+</html>

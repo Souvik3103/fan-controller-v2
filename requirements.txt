@@ -1,0 +1,7 @@
+Flask
+Flask-SocketIO
+paho-mqtt
+gpiozero
+python-dotenv
+psutil
+simple-websocket

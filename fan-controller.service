@@ -1,0 +1,20 @@
+[Unit]
+Description=Bambu A1 Fan Controller Dashboard
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=souvikroy
+Group=souvikroy
+WorkingDirectory=/home/souvikroy/fan-controller
+Environment="PYTHONUNBUFFERED=1"
+ExecStart=/home/souvikroy/fan-controller/.venv/bin/python /home/souvikroy/fan-controller/app.py
+Restart=always
+RestartSec=5
+
+# GPIO access
+SupplementaryGroups=gpio
+
+[Install]
+WantedBy=multi-user.target
